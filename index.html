@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animated Todo App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --accent: #f093fb;
+      --glass-bg: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --text: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.7);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: var(--text);
+      padding: 2rem;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-container {
+      animation: fadeIn 0.5s ease-out 0.1s both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .progress-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .progress-percent {
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #51cf66, #74c0fc);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.5s ease-out;
+    }
+
+    .progress-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.75rem;
+    }
+
+    .stat.completed { color: #51cf66; font-size: 0.8rem; }
+    .stat.remaining { color: var(--text-muted); font-size: 0.8rem; }
+
+    .search-bar {
+      position: relative;
+      animation: fadeIn 0.5s ease-out 0.15s both;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.25rem;
+      height: 1.25rem;
+      color: #999;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.875rem 1rem 0.875rem 3rem;
+      border: none;
+      border-radius: 14px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      font-size: 0.95rem;
+      color: var(--text);
+      border: 1px solid var(--glass-border);
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-input:focus {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.5rem;
+      height: 1.5rem;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      color: var(--text);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clear-search.visible { display: flex; }
+
+    .category-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      animation: fadeIn 0.5s ease-out 0.2s both;
+    }
+
+    .category-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid;
+      border-radius: 20px;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .category-btn:hover { transform: scale(1.05); }
+    .category-btn.active { font-weight: 600; }
+    .category-btn[data-cat="All"].active { background: #fff; color: #333; }
+    .category-btn[data-cat="Personal"].active { background: #f093fb; color: #333; }
+    .category-btn[data-cat="Work"].active { background: #667eea; color: #fff; }
+    .category-btn[data-cat="Shopping"].active { background: #ffb347; color: #333; }
+    .category-btn[data-cat="Health"].active { background: #51cf66; color: #333; }
+    .category-btn[data-cat="Learning"].active { background: #74c0fc; color: #333; }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      animation: fadeIn 0.5s ease-out 0.25s both;
+    }
+
+    .todo-input {
+      flex: 1;
+      padding: 0.875rem 1.25rem;
+      border: none;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      color: #333;
+      outline: none;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .todo-input:focus {
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5);
+    }
+
+    .add-btn {
+      width: 50px;
+      height: 50px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 1.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .add-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .add-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .options-toggle {
+      display: block;
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .options-toggle:hover { color: var(--text); }
+
+    .options-panel {
+      display: none;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .options-panel.visible { display: block; }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .option-row label {
+      width: 80px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .option-row select,
+    .option-row input[type="date"] {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 0.875rem;
+      color: #333;
+      outline: none;
+    }
+
+    .priority-btns { display: flex; gap: 0.5rem; }
+
+    .priority-btn {
+      padding: 0.375rem 0.75rem;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .priority-btn.active.low { background: #51cf66; }
+    .priority-btn.active.medium { background: #fcc419; color: #333; }
+    .priority-btn.active.high { background: #ff6b6b; }
+
+    .todo-list {
+      margin-top: 1rem;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(100px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .todo-item:hover {
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .todo-item.completed {
+      opacity: 0.6;
+    }
+
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .todo-item.removing {
+      animation: slideOut 0.3s ease-out forwards;
+    }
+
+    @keyframes slideOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(-100px); }
+    }
+
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .checkbox:hover { border-color: #51cf66; }
+
+    .todo-item.completed .checkbox {
+      background: #51cf66;
+      border-color: #51cf66;
+    }
+
+    .check-icon {
+      display: none;
+      width: 16px;
+      height: 16px;
+      color: white;
+    }
+
+    .todo-item.completed .check-icon {
+      display: block;
+      animation: checkBounce 0.3s ease;
+    }
+
+    @keyframes checkBounce {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .todo-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    .todo-text {
+      font-size: 1rem;
+      word-break: break-word;
+    }
+
+    .todo-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .category-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .category-badge[data-cat="Personal"] { background: #f093fb; }
+    .category-badge[data-cat="Work"] { background: #667eea; color: #fff; }
+    .category-badge[data-cat="Shopping"] { background: #ffb347; }
+    .category-badge[data-cat="Health"] { background: #51cf66; }
+    .category-badge[data-cat="Learning"] { background: #74c0fc; }
+
+    .priority-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .priority-dot[data-priority="high"] { background: #ff6b6b; }
+    .priority-dot[data-priority="medium"] { background: #fcc419; }
+    .priority-dot[data-priority="low"] { background: #51cf66; }
+
+    .delete-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .delete-btn:hover {
+      background: rgba(255, 107, 107, 0.2);
+      color: #ff6b6b;
+      transform: rotate(90deg);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✨ My Tasks</h1>
+
+    <div class="glass-card progress-container">
+      <div class="progress-header">
+        <span class="progress-label">Progress</span>
+        <span class="progress-percent" id="progressPercent">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-stats">
+        <span class="stat completed" id="completedCount">✓ 0 done</span>
+        <span class="stat remaining" id="remainingCount">○ 0 left</span>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search tasks...">
+      <button class="clear-search" id="clearSearch">✕</button>
+    </div>
+
+    <div class="category-filter" id="categoryFilter"></div>
+
+    <div class="glass-card">
+      <div class="input-row">
+        <input type="text" class="todo-input" id="todoInput" placeholder="What needs to be done?">
+        <button class="add-btn" id="addBtn">+</button>
+      </div>
+      <button class="options-toggle" id="optionsToggle">▶ More options</button>
+      <div class="options-panel" id="optionsPanel">
+        <div class="option-row">
+          <label>Category:</label>
+          <select id="categorySelect">
+            <option value="Personal">Personal</option>
+            <option value="Work">Work</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Health">Health</option>
+            <option value="Learning">Learning</option>
+          </select>
+        </div>
+        <div class="option-row">
+          <label>Priority:</label>
+          <div class="priority-btns">
+            <button class="priority-btn low" data-priority="low">Low</button>
+            <button class="priority-btn medium active" data-priority="medium">Medium</button>
+            <button class="priority-btn high" data-priority="high">High</button>
+          </div>
+        </div>
+        <div class="option-row">
+          <label>Due Date:</label>
+          <input type="date" id="dueDateInput">
+        </div>
+      </div>
+    </div>
+
+    <div class="todo-list" id="todoList"></div>
+  </div>
+
+  <script>
+    const categories = ['All', 'Personal', 'Work', 'Shopping', 'Health', 'Learning'];
+    let todos = JSON.parse(localStorage.getItem('todos')) || [];
+    let currentCategory = 'All';
+    let currentPriority = 'medium';
+
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
+    const todoInput = document.getElementById('todoInput');
+    const addBtn = document.getElementById('addBtn');
+    const todoList = document.getElementById('todoList');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const optionsToggle = document.getElementById('optionsToggle');
+    const optionsPanel = document.getElementById('optionsPanel');
+    const categorySelect = document.getElementById('categorySelect');
+    const dueDateInput = document.getElementById('dueDateInput');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressFill = document.getElementById('progressFill');
+    const completedCount = document.getElementById('completedCount');
+    const remainingCount = document.getElementById('remainingCount');
+
+    function saveTodos() {
+      localStorage.setItem('todos', JSON.stringify(todos));
+    }
+
+    function updateProgress() {
+      const completed = todos.filter(t => t.completed).length;
+      const percentage = todos.length ? Math.round((completed / todos.length) * 100) : 0;
+      progressPercent.textContent = percentage + '%';
+      progressFill.style.width = percentage + '%';
+      completedCount.textContent = '✓ ' + completed + ' done';
+      remainingCount.textContent = '○ ' + (todos.length - completed) + ' left';
+    }
+
+    function renderCategories() {
+      categoryFilter.innerHTML = '';
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'category-btn' + (currentCategory === cat ? ' active' : '');
+        btn.dataset.cat = cat;
+        btn.textContent = cat;
+        btn.onclick = () => { currentCategory = cat; renderCategories(); renderTodos(); };
+        categoryFilter.appendChild(btn);
+      });
+    }
+
+    function renderTodos() {
+      const search = searchInput.value.toLowerCase();
+      const filtered = todos.filter(todo => {
+        const matchesSearch = todo.text.toLowerCase().includes(search);
+        const matchesCategory = currentCategory === 'All' || todo.category === currentCategory;
+        return matchesSearch && matchesCategory;
+      });
+
+      if (filtered.length === 0) {
+        todoList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>No tasks yet! Add one above 👆</p>
+          </div>
+        `;
+        return;
+      }
+
+      todoList.innerHTML = '';
+      filtered.forEach(todo => {
+        const item = document.createElement('div');
+        item.className = 'todo-item' + (todo.completed ? ' completed' : '');
+        item.dataset.id = todo.id;
+        item.innerHTML = `
+          <div class="checkbox" onclick="toggleTodo('${todo.id}')">
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <path d="M5 12l5 5L20 7"/>
+            </svg>
+          </div>
+          <div class="todo-content">
+            <span class="todo-text">${todo.text}</span>
+            <div class="todo-meta">
+              <span class="category-badge" data-cat="${todo.category}">${todo.category}</span>
+              <span class="priority-dot" data-priority="${todo.priority}"></span>
+            </div>
+          </div>
+          <button class="delete-btn" onclick="deleteTodo('${todo.id}')">✕</button>
+        `;
+        todoList.appendChild(item);
+      });
+    }
+
+    function addTodo() {
+      const text = todoInput.value.trim();
+      if (!text) return;
+      
+      const todo = {
+        id: Date.now().toString(),
+        text: text,
+        completed: false,
+        category: categorySelect.value,
+        priority: currentPriority,
+        dueDate: dueDateInput.value || null,
+        createdAt: new Date().toISOString()
+      };
+      
+      todos.unshift(todo);
+      saveTodos();
+      updateProgress();
+      renderTodos();
+      
+      todoInput.value = '';
+      dueDateInput.value = '';
+    }
+
+    function toggleTodo(id) {
+      const todo = todos.find(t => t.id === id);
+      if (todo) {
+        todo.completed = !todo.completed;
+        saveTodos();
+        updateProgress();
+        renderTodos();
+      }
+    }
+
+    function deleteTodo(id) {
+      const item = document.querySelector(`.todo-item[data-id="${id}"]`);
+      if (item) {
+        item.classList.add('removing');
+        setTimeout(() => {
+          todos = todos.filter(t => t.id !== id);
+          saveTodos();
+          updateProgress();
+          renderTodos();
+        }, 300);
+      }
+    }
+
+    // Event Listeners
+    addBtn.onclick = addTodo;
+    todoInput.onkeydown = (e) => { if (e.key === 'Enter') addTodo(); };
+
+    searchInput.oninput = () => {
+      clearSearch.classList.toggle('visible', searchInput.value.length > 0);
+      renderTodos();
+    };
+
+    clearSearch.onclick = () => {
+      searchInput.value = '';
+      clearSearch.classList.remove('visible');
+      renderTodos();
+    };
+
+    optionsToggle.onclick = () => {
+      const isVisible = optionsPanel.classList.toggle('visible');
+      optionsToggle.textContent = isVisible ? '▼ Less' : '▶ More options';
+    };
+
+    document.querySelectorAll('.priority-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPriority = btn.dataset.priority;
+      };
+    });
+
+    // Initial render
+    renderCategories();
+    renderTodos();
+    updateProgress();
+  </script>
+</body>
+</html>
