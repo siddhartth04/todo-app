@@ -4,18 +4,19 @@ on:
   push:
     branches: [master]
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       
-      - name: Upload index.html
-        uses: actions/upload-artifact@v4
-        with:
-          name: todo-app
-          path: index.html
-          
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
